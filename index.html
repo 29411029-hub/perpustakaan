@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERPUSTAKAAN SELF - Management & Overdue Monitoring</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Cinzel for Elegant Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Cinzel', 'serif'],
+                    },
+                    colors: {
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#d97706',
+                            600: '#b45309',
+                            goldish: '#dfb76c',
+                        },
+                        navy: {
+                            800: '#0b1329',
+                            900: '#050a18',
+                            950: '#02050e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #050a18;
+        }
+        .font-brand {
+            font-family: 'Cinzel', serif;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(223, 183, 108, 0.15);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(223, 183, 108, 0.35);
+            box-shadow: 0 10px 30px -10px rgba(223, 183, 108, 0.1);
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fff3d1 0%, #dfb76c 50%, #9e7527 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border-gradient {
+            border-image: linear-gradient(to right, #dfb76c, #9e7527) 1;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #070d1e;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #dfb76c;
+        }
+    </style>
+</head>
+<body class="text-slate-200 antialiased min-h-screen flex flex-col md:flex-row bg-[#030712] selection:bg-amber-500/30 selection:text-amber-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-72 bg-[#050b1a] text-slate-300 flex-shrink-0 flex flex-col justify-between border-r border-amber-500/10 shadow-2xl relative z-20">
+        <div>
+            <!-- Luxury Logo Header -->
+            <div class="p-6 flex items-center gap-3.5 border-b border-amber-500/10 bg-gradient-to-b from-amber-500/5 to-transparent">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-300 via-amber-600 to-amber-800 flex items-center justify-center text-slate-950 text-xl font-bold shadow-lg shadow-amber-500/20 ring-1 ring-amber-300/40">
+                    <i class="fa-solid fa-crown text-slate-950"></i>
+                </div>
+                <div>
+                    <h1 class="font-brand font-bold text-lg tracking-wider gold-gradient-text uppercase leading-none">PERPUSTAKAAN</h1>
+                    <span class="font-brand font-extrabold text-xl tracking-widest text-amber-200 leading-none">SELF</span>
+                    <p class="text-[10px] text-amber-400/60 tracking-widest uppercase mt-1">Excellence & System</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1.5">
+                <div class="px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Menu Utama</div>
+                
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-xs tracking-wide transition-all duration-300 bg-gradient-to-r from-amber-500/20 to-amber-600/10 text-amber-300 border border-amber-500/30 shadow-lg shadow-amber-950/40">
+                    <i class="fa-solid fa-chart-pie w-4 text-amber-400"></i>
+                    <span>Executive Dashboard</span>
+                </button>
+
+                <button onclick="switchTab('form-pengembalian')" id="nav-form-pengembalian" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-xs tracking-wide transition-all duration-300 text-slate-400 hover:text-slate-100 hover:bg-slate-900/60 border border-transparent hover:border-slate-800">
+                    <i class="fa-solid fa-arrow-left-rotate w-4"></i>
+                    <span>Pengembalian Buku</span>
+                </button>
+
+                <button onclick="switchTab('monitoring')" id="nav-monitoring" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-xs tracking-wide transition-all duration-300 text-slate-400 hover:text-slate-100 hover:bg-slate-900/60 border border-transparent hover:border-slate-800">
+                    <i class="fa-solid fa-clock-rotate-left w-4"></i>
+                    <span>Monitoring Keterlambatan</span>
+                    <span id="badge-terlambat" class="ml-auto bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+
+                <button onclick="switchTab('riwayat')" id="nav-riwayat" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-xs tracking-wide transition-all duration-300 text-slate-400 hover:text-slate-100 hover:bg-slate-900/60 border border-transparent hover:border-slate-800">
+                    <i class="fa-solid fa-receipt w-4"></i>
+                    <span>Riwayat Pengembalian</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- User Info / Footer -->
+        <div class="p-4 border-t border-amber-500/10 bg-[#02050e]">
+            <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-slate-950 font-bold text-xs shadow-md">
+                    PS
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs font-semibold text-slate-200 truncate">Petugas Self</p>
+                    <p class="text-[10px] text-amber-400/70 truncate flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Mode Administrator
+                    </p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10">
+
+        <!-- Background Ambient Glows -->
+        <div class="fixed -top-40 -left-40 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="fixed top-1/2 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-500/10">
+                <div>
+                    <h2 class="text-2xl font-brand font-bold gold-gradient-text tracking-wide">Ringkasan Eksekutif</h2>
+                    <p class="text-xs text-slate-400 mt-1">Sistem Pemantauan Operasional & Keterlambatan PERPUSTAKAAN SELF</p>
+                </div>
+                <div class="flex items-center gap-2.5 bg-slate-900/80 px-4 py-2 rounded-xl border border-amber-500/20 text-xs text-amber-300 font-medium self-start sm:self-auto shadow-lg backdrop-blur-md">
+                    <i class="fa-regular fa-calendar text-amber-400"></i>
+                    <span id="current-date-display">-</span>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl glass-card-hover transition-all duration-300 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Aktif Dipinjam</p>
+                        <h3 id="stat-total-pinjam" class="text-2xl font-bold text-slate-100 mt-0.5">0</h3>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl glass-card-hover transition-all duration-300 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Kembali Hari Ini</p>
+                        <h3 id="stat-kembali-hari-ini" class="text-2xl font-bold text-slate-100 mt-0.5">0</h3>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl glass-card-hover transition-all duration-300 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Buku Terlambat</p>
+                        <h3 id="stat-total-terlambat" class="text-2xl font-bold text-slate-100 mt-0.5">0</h3>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl glass-card-hover transition-all duration-300 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Total Denda Terkumpul</p>
+                        <h3 id="stat-total-denda" class="text-2xl font-bold text-amber-300 mt-0.5">Rp 0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts & Critical Overdue Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Doughnut Chart -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-200 tracking-wide mb-1">Status Pengembalian Buku</h3>
+                        <p class="text-xs text-slate-400 mb-4">Distribusi status peminjaman saat ini</p>
+                    </div>
+                    <div class="relative flex items-center justify-center h-64">
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Table / Urgent Overdues -->
+                <div class="lg:col-span-2 glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-200 tracking-wide">Keterlambatan Paling Kritis</h3>
+                                <p class="text-xs text-slate-400">Anggota yang membutuhkan tindakan/pengingat prioritas</p>
+                            </div>
+                            <button onclick="switchTab('monitoring')" class="text-xs font-semibold text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5">
+                                Lihat Semua <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-[11px] font-semibold text-amber-400/80 border-b border-amber-500/10 uppercase tracking-wider">
+                                        <th class="pb-3">Anggota</th>
+                                        <th class="pb-3">Judul Buku</th>
+                                        <th class="pb-3 text-center">Tenggat</th>
+                                        <th class="pb-3 text-center">Terlambat</th>
+                                        <th class="pb-3 text-right">Estimasi Denda</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-critical-table" class="text-xs divide-y divide-slate-800/60">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: FORM PENGEMBALIAN BUKU -->
+        <section id="tab-form-pengembalian" class="tab-content hidden space-y-6">
+            <div class="pb-4 border-b border-amber-500/10">
+                <h2 class="text-2xl font-brand font-bold gold-gradient-text tracking-wide">Pengembalian & Pelunasan</h2>
+                <p class="text-xs text-slate-400 mt-1">Proses pengembalian fisik buku dan kalkulasi otomatis keterlambatan/denda fisik</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Search & Selection -->
+                <div class="lg:col-span-1 glass-card p-6 rounded-2xl space-y-5">
+                    <h3 class="text-sm font-semibold text-amber-300 border-b border-amber-500/10 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i> 1. Cari Transaksi
+                    </h3>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Cari ID Transaksi / ID Anggota</label>
+                        <div class="relative">
+                            <input type="text" id="input-search-id" placeholder="Contoh: TRX-101 atau AG-001" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/50 transition">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
+                        <div class="relative flex justify-center text-[10px] uppercase tracking-widest"><span class="bg-[#0b1329] px-2 text-slate-500">Atau Pilih Peminjaman</span></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Pilih dari Daftar Aktif</label>
+                        <select id="select-active-trx" onchange="loadTransactionData(this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/50 transition">
+                            <option value="">-- Select Loan Record --</option>
+                        </select>
+                    </div>
+
+                    <div id="quick-trx-info" class="hidden p-4 rounded-xl bg-slate-950/60 border border-amber-500/20 text-xs space-y-2.5">
+                        <div class="flex justify-between border-b border-slate-800/80 pb-2"><span class="text-slate-400">Anggota:</span> <span id="info-nama" class="font-semibold text-amber-300">-</span></div>
+                        <div class="flex justify-between border-b border-slate-800/80 pb-2"><span class="text-slate-400">Buku:</span> <span id="info-buku" class="font-semibold text-slate-200 text-right truncate max-w-[150px]">-</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Tenggat Kembalikan:</span> <span id="info-tenggat" class="font-mono font-semibold text-slate-200">-</span></div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Process Form -->
+                <div class="lg:col-span-2 glass-card p-6 rounded-2xl space-y-6">
+                    <h3 class="text-sm font-semibold text-amber-300 border-b border-amber-500/10 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-xs"></i> 2. Kondisi & Kalkulasi Denda
+                    </h3>
+
+                    <form id="form-pengembalian-buku" onsubmit="handleReturnSubmit(event)" class="space-y-5">
+                        <input type="hidden" id="hidden-trx-id">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">Tanggal Pengembalian</label>
+                                <input type="date" id="input-tgl-kembali" onchange="calculateFineDetails()" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/50 transition" required>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">Kondisi Fisik Buku</label>
+                                <select id="select-kondisi" onchange="calculateFineDetails()" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/50 transition">
+                                    <option value="Bagus">Sempurna / Bagus (Denda Rp 0)</option>
+                                    <option value="Rusak Ringan">Rusak Ringan (Denda Rp 5.000)</option>
+                                    <option value="Rusak Berat">Rusak Berat (Denda Rp 20.000)</option>
+                                    <option value="Hilang">Hilang / Ganti Rugi (Denda Rp 75.000)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Fine Calculation Summary Card -->
+                        <div class="p-5 bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-slate-950 rounded-2xl border border-amber-500/25 space-y-3.5 shadow-xl">
+                            <h4 class="text-[11px] font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                                <i class="fa-solid fa-receipt"></i> Rincian Tagihan Denda
+                            </h4>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Keterlambatan (<span id="calc-hari-terlambat" class="text-amber-300 font-bold">0</span> hari × Rp 1.000):</span>
+                                    <span id="calc-denda-terlambat" class="font-mono text-slate-200">Rp 0</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Denda Kondisi Fisik (<span id="calc-nama-kondisi" class="text-slate-200">Bagus</span>):</span>
+                                    <span id="calc-denda-kondisi" class="font-mono text-slate-200">Rp 0</span>
+                                </div>
+                                <div class="border-t border-amber-500/20 pt-3 flex justify-between items-center">
+                                    <span class="font-semibold text-slate-200">Total Denda Yang Harus Diselesaikan:</span>
+                                    <span id="calc-total-denda" class="text-2xl font-extrabold gold-gradient-text">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Catatan Tambahan (Opsional)</label>
+                            <textarea id="input-catatan" rows="2" placeholder="Catatan kondisi buku atau konfirmasi pelunasan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/50 transition"></textarea>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button type="button" onclick="resetReturnForm()" class="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-400 font-medium text-xs hover:bg-slate-800 hover:text-slate-200 transition">
+                                Reset Form
+                            </button>
+                            <button type="submit" id="btn-submit-return" disabled class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2">
+                                <i class="fa-solid fa-check-double"></i> Konfirmasi Pengembalian
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MONITORING KETERLAMBATAN -->
+        <section id="tab-monitoring" class="tab-content hidden space-y-6">
+            <div class="pb-4 border-b border-amber-500/10">
+                <h2 class="text-2xl font-brand font-bold gold-gradient-text tracking-wide">Monitoring & Warning System</h2>
+                <p class="text-xs text-slate-400 mt-1">Pantau status tenggat waktu, keterlambatan, dan kirim peringatan langsung ke peminjaman</p>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full md:w-80">
+                    <input type="text" id="monitoring-search" oninput="renderMonitoringTable()" placeholder="Cari nama anggota atau judul buku..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/50 transition">
+                    <i class="fa-solid fa-search absolute left-3.5 top-2.5 text-slate-500 text-xs"></i>
+                </div>
+
+                <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 custom-scrollbar">
+                    <button onclick="setFilterStatus('ALL')" id="filter-btn-ALL" class="filter-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border bg-amber-500/20 text-amber-300 border-amber-500/40">
+                        Semua
+                    </button>
+                    <button onclick="setFilterStatus('TERLAMBAT')" id="filter-btn-TERLAMBAT" class="filter-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                        Terlambat
+                    </button>
+                    <button onclick="setFilterStatus('MENJELANG')" id="filter-btn-MENJELANG" class="filter-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                        Menjelang Tenggat (≤ 2 hari)
+                    </button>
+                    <button onclick="setFilterStatus('TEPAT_WAKTU')" id="filter-btn-TEPAT_WAKTU" class="filter-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                        Lancar / Tepat Waktu
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/90 text-[11px] font-semibold text-amber-400/80 uppercase tracking-wider border-b border-amber-500/10">
+                                <th class="p-4">ID Transaksi</th>
+                                <th class="p-4">Peminjam</th>
+                                <th class="p-4">Buku</th>
+                                <th class="p-4 text-center">Tgl Pinjam</th>
+                                <th class="p-4 text-center">Tenggat</th>
+                                <th class="p-4 text-center">Status Waktu</th>
+                                <th class="p-4 text-right">Est. Denda</th>
+                                <th class="p-4 text-center">Status</th>
+                                <th class="p-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monitoring-table-body" class="text-xs divide-y divide-slate-800/60">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: RIWAYAT PENGEMBALIAN -->
+        <section id="tab-riwayat" class="tab-content hidden space-y-6">
+            <div class="pb-4 border-b border-amber-500/10">
+                <h2 class="text-2xl font-brand font-bold gold-gradient-text tracking-wide">Arsip Riwayat Pengembalian</h2>
+                <p class="text-xs text-slate-400 mt-1">Catatan tersimpan seluruh transaksi pengembalian buku dan denda yang telah dilunasi</p>
+            </div>
+
+            <!-- History Table -->
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/90 text-[11px] font-semibold text-amber-400/80 uppercase tracking-wider border-b border-amber-500/10">
+                                <th class="p-4">ID Return</th>
+                                <th class="p-4">ID Pinjam</th>
+                                <th class="p-4">Nama Anggota</th>
+                                <th class="p-4">Judul Buku</th>
+                                <th class="p-4 text-center">Tgl Kembali</th>
+                                <th class="p-4 text-center">Kondisi Buku</th>
+                                <th class="p-4 text-right">Denda Terbayar</th>
+                                <th class="p-4">Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riwayat-table-body" class="text-xs divide-y divide-slate-800/60">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: Kirim Peringatan Notifikasi -->
+    <div id="modal-notif" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 w-full max-w-lg rounded-2xl border border-amber-500/30 shadow-2xl overflow-hidden">
+            <div class="p-5 bg-gradient-to-r from-amber-600/30 via-slate-900 to-slate-900 border-b border-amber-500/20 flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-paper-plane text-amber-400"></i>
+                    <h3 class="font-brand font-semibold text-slate-100 text-sm tracking-wide">PERPUSTAKAAN SELF - Warning Dispatcher</h3>
+                </div>
+                <button onclick="closeNotifModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Target Anggota</label>
+                    <p id="modal-penerima-info" class="font-semibold text-amber-300 text-sm">Nama Member (0812xxxx)</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Metode Pengiriman</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center justify-center gap-2.5 p-3 rounded-xl border cursor-pointer hover:bg-slate-800/60 transition border-amber-500/40 text-amber-300 bg-amber-500/10">
+                            <input type="radio" name="notif-channel" value="WA" checked class="text-amber-500 focus:ring-0">
+                            <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i>
+                            <span class="text-xs font-semibold">WhatsApp</span>
+                        </label>
+                        <label class="flex items-center justify-center gap-2.5 p-3 rounded-xl border cursor-pointer hover:bg-slate-800/60 transition border-slate-800 text-slate-400">
+                            <input type="radio" name="notif-channel" value="EMAIL" class="text-amber-500 focus:ring-0">
+                            <i class="fa-regular fa-envelope text-sky-400 text-base"></i>
+                            <span class="text-xs font-semibold">Email Official</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Draft Pesan Peringatan Resmi</label>
+                    <textarea id="modal-pesan-text" rows="5" class="w-full p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono leading-relaxed focus:outline-none focus:border-amber-500/50"></textarea>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-950/80 border-t border-slate-800/80 flex justify-end gap-3">
+                <button onclick="closeNotifModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-800 transition">Batal</button>
+                <button onclick="sendNotifAction()" class="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-amber-700 text-slate-950 hover:from-amber-400 hover:to-amber-600 shadow-md shadow-amber-500/20 transition flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Kirim Notifikasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const DENDA_PER_HARI = 1000;
+
+        const KONDISI_DENDA = {
+            'Bagus': 0,
+            'Rusak Ringan': 5000,
+            'Rusak Berat': 20000,
+            'Hilang': 75000
+        };
+
+        function getFormattedDate(offsetDays = 0) {
+            const date = new Date();
+            date.setDate(date.getDate() + offsetDays);
+            return date.toISOString().split('T')[0];
+        }
+
+        let activeLoans = [
+            {
+                id: 'TRX-101',
+                memberId: 'AG-001',
+                memberName: 'Ahmad Rizky',
+                phone: '081234567890',
+                email: 'ahmad.rizky@example.com',
+                bookTitle: 'Laskar Pelangi - Andrea Hirata',
+                borrowDate: getFormattedDate(-14),
+                dueDate: getFormattedDate(-7),
+            },
+            {
+                id: 'TRX-102',
+                memberId: 'AG-002',
+                memberName: 'Siti Nurhaliza',
+                phone: '085678901234',
+                email: 'siti.nur@example.com',
+                bookTitle: 'Bumi Manusia - Pramoedya Ananta Toer',
+                borrowDate: getFormattedDate(-10),
+                dueDate: getFormattedDate(-3),
+            },
+            {
+                id: 'TRX-103',
+                memberId: 'AG-003',
+                memberName: 'Budi Santoso',
+                phone: '081901234567',
+                email: 'budi.santoso@example.com',
+                bookTitle: 'Atomic Habits - James Clear',
+                borrowDate: getFormattedDate(-5),
+                dueDate: getFormattedDate(2),
+            },
+            {
+                id: 'TRX-104',
+                memberId: 'AG-004',
+                memberName: 'Dewi Anggraini',
+                phone: '087812345678',
+                email: 'dewi.ang@example.com',
+                bookTitle: 'Filosofi Teras - Henry Manampiring',
+                borrowDate: getFormattedDate(-2),
+                dueDate: getFormattedDate(5),
+            },
+            {
+                id: 'TRX-105',
+                memberId: 'AG-005',
+                memberName: 'Fajar Pratama',
+                phone: '083899001122',
+                email: 'fajar.p@example.com',
+                bookTitle: 'Clean Code - Robert C. Martin',
+                borrowDate: getFormattedDate(-20),
+                dueDate: getFormattedDate(-6),
+            }
+        ];
+
+        let returnHistory = [
+            {
+                returnId: 'RET-001',
+                trxId: 'TRX-099',
+                memberName: 'Eka Wijaya',
+                bookTitle: 'Seni untuk Bersikap Bodo Amat',
+                returnDate: getFormattedDate(0),
+                condition: 'Bagus',
+                finePaid: 2000,
+                notes: 'Terlambat 2 hari, kondisi fisik sempurna.'
+            },
+            {
+                returnId: 'RET-002',
+                trxId: 'TRX-098',
+                memberName: 'Rina Febriani',
+                bookTitle: 'Sapiens - Yuval Noah Harari',
+                returnDate: getFormattedDate(-1),
+                condition: 'Rusak Ringan',
+                finePaid: 5000,
+                notes: 'Cover belakang terlipat sedikit.'
+            }
+        ];
+
+        let currentFilterStatus = 'ALL';
+        let statusChart = null;
+        let selectedNotifTrx = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('id-ID', options);
+            document.getElementById('input-tgl-kembali').value = getFormattedDate(0);
+
+            populateTrxSelectOptions();
+            updateDashboard();
+            renderMonitoringTable();
+            renderHistoryTable();
+            initChart();
+
+            document.getElementById('input-search-id').addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                if (!query) return;
+                const found = activeLoans.find(l => l.id.toLowerCase() === query || l.memberId.toLowerCase() === query);
+                if (found) {
+                    document.getElementById('select-active-trx').value = found.id;
+                    loadTransactionData(found.id);
+                }
+            });
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-gradient-to-r', 'from-amber-500/20', 'to-amber-600/10', 'text-amber-300', 'border-amber-500/30', 'shadow-lg', 'shadow-amber-950/40');
+                btn.classList.add('text-slate-400', 'hover:text-slate-100', 'hover:bg-slate-900/60', 'border-transparent');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            activeNav.classList.add('bg-gradient-to-r', 'from-amber-500/20', 'to-amber-600/10', 'text-amber-300', 'border-amber-500/30', 'shadow-lg', 'shadow-amber-950/40');
+            activeNav.classList.remove('text-slate-400', 'hover:text-slate-100', 'hover:bg-slate-900/60', 'border-transparent');
+
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        function updateDashboard() {
+            const today = getFormattedDate(0);
+            
+            let overdueCount = 0;
+            activeLoans.forEach(loan => {
+                const days = calculateDaysOverdue(loan.dueDate, today);
+                if (days > 0) overdueCount++;
+            });
+
+            const totalFines = returnHistory.reduce((sum, item) => sum + item.finePaid, 0);
+
+            document.getElementById('stat-total-pinjam').textContent = activeLoans.length;
+            document.getElementById('stat-kembali-hari-ini').textContent = returnHistory.filter(r => r.returnDate === today).length;
+            document.getElementById('stat-total-terlambat').textContent = overdueCount;
+            document.getElementById('badge-terlambat').textContent = overdueCount;
+            document.getElementById('stat-total-denda').textContent = formatRupiah(totalFines);
+
+            const criticalTable = document.getElementById('dashboard-critical-table');
+            criticalTable.innerHTML = '';
+
+            const overdueList = activeLoans
+                .map(loan => {
+                    const lateDays = calculateDaysOverdue(loan.dueDate, today);
+                    return { ...loan, lateDays, fineEst: lateDays * DENDA_PER_HARI };
+                })
+                .filter(item => item.lateDays > 0)
+                .sort((a, b) => b.lateDays - a.lateDays);
+
+            if (overdueList.length === 0) {
+                criticalTable.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500 text-xs">Seluruh peminjaman tepat waktu 🎉</td></tr>`;
+            } else {
+                overdueList.slice(0, 4).forEach(item => {
+                    criticalTable.innerHTML += `
+                        <tr class="hover:bg-slate-900/40">
+                            <td class="py-3 font-medium text-slate-200">${item.memberName} <span class="text-[10px] text-amber-400/60 block font-mono">${item.memberId}</span></td>
+                            <td class="py-3 text-slate-400 truncate max-w-[170px]">${item.bookTitle}</td>
+                            <td class="py-3 text-center font-mono text-xs text-slate-400">${item.dueDate}</td>
+                            <td class="py-3 text-center"><span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">+${item.lateDays} Hari</span></td>
+                            <td class="py-3 text-right font-mono font-semibold text-amber-300">${formatRupiah(item.fineEst)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            updateChartData(overdueCount, activeLoans.length - overdueCount);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('chartStatus').getContext('2d');
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Terlambat', 'Tepat Waktu'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#f43f5e', '#dfb76c'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Plus Jakarta Sans', size: 12 }, color: '#94a3b8', usePointStyle: true, boxWidth: 8 }
+                        }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
+
+        function updateChartData(terlambat, tepatWaktu) {
+            if (statusChart) {
+                statusChart.data.datasets[0].data = [terlambat, tepatWaktu];
+                statusChart.update();
+            }
+        }
+
+        function populateTrxSelectOptions() {
+            const select = document.getElementById('select-active-trx');
+            select.innerHTML = '<option value="">-- Select Active Loan --</option>';
+            activeLoans.forEach(loan => {
+                select.innerHTML += `<option value="${loan.id}">${loan.id} - ${loan.memberName} (${loan.bookTitle})</option>`;
+            });
+        }
+
+        function loadTransactionData(trxId) {
+            const infoBox = document.getElementById('quick-trx-info');
+            const submitBtn = document.getElementById('btn-submit-return');
+
+            if (!trxId) {
+                infoBox.classList.add('hidden');
+                submitBtn.disabled = true;
+                document.getElementById('hidden-trx-id').value = '';
+                calculateFineDetails();
+                return;
+            }
+
+            const loan = activeLoans.find(l => l.id === trxId);
+            if (loan) {
+                document.getElementById('hidden-trx-id').value = loan.id;
+                document.getElementById('info-nama').textContent = `${loan.memberName} (${loan.memberId})`;
+                document.getElementById('info-buku').textContent = loan.bookTitle;
+                document.getElementById('info-tenggat').textContent = loan.dueDate;
+                
+                infoBox.classList.remove('hidden');
+                submitBtn.disabled = false;
+
+                calculateFineDetails();
+            }
+        }
+
+        function calculateFineDetails() {
+            const trxId = document.getElementById('hidden-trx-id').value;
+            const returnDateVal = document.getElementById('input-tgl-kembali').value;
+            const conditionVal = document.getElementById('select-kondisi').value;
+
+            if (!trxId || !returnDateVal) {
+                document.getElementById('calc-hari-terlambat').textContent = '0';
+                document.getElementById('calc-denda-terlambat').textContent = formatRupiah(0);
+                document.getElementById('calc-nama-kondisi').textContent = conditionVal;
+                document.getElementById('calc-denda-kondisi').textContent = formatRupiah(KONDISI_DENDA[conditionVal] || 0);
+                document.getElementById('calc-total-denda').textContent = formatRupiah(KONDISI_DENDA[conditionVal] || 0);
+                return;
+            }
+
+            const loan = activeLoans.find(l => l.id === trxId);
+            if (!loan) return;
+
+            const daysLate = calculateDaysOverdue(loan.dueDate, returnDateVal);
+            const fineLate = daysLate * DENDA_PER_HARI;
+            const fineCondition = KONDISI_DENDA[conditionVal] || 0;
+            const totalFine = fineLate + fineCondition;
+
+            document.getElementById('calc-hari-terlambat').textContent = daysLate;
+            document.getElementById('calc-denda-terlambat').textContent = formatRupiah(fineLate);
+            document.getElementById('calc-nama-kondisi').textContent = conditionVal;
+            document.getElementById('calc-denda-kondisi').textContent = formatRupiah(fineCondition);
+            document.getElementById('calc-total-denda').textContent = formatRupiah(totalFine);
+        }
+
+        function handleReturnSubmit(event) {
+            event.preventDefault();
+
+            const trxId = document.getElementById('hidden-trx-id').value;
+            const returnDate = document.getElementById('input-tgl-kembali').value;
+            const condition = document.getElementById('select-kondisi').value;
+            const notes = document.getElementById('input-catatan').value;
+
+            const loanIndex = activeLoans.findIndex(l => l.id === trxId);
+            if (loanIndex === -1) {
+                showToast('Transaksi tidak ditemukan!', 'error');
+                return;
+            }
+
+            const loan = activeLoans[loanIndex];
+            const daysLate = calculateDaysOverdue(loan.dueDate, returnDate);
+            const fineTotal = (daysLate * DENDA_PER_HARI) + (KONDISI_DENDA[condition] || 0);
+
+            const newReturnRecord = {
+                returnId: `RET-${Math.floor(100 + Math.random() * 900)}`,
+                trxId: loan.id,
+                memberName: loan.memberName,
+                bookTitle: loan.bookTitle,
+                returnDate: returnDate,
+                condition: condition,
+                finePaid: fineTotal,
+                notes: notes || '-'
+            };
+
+            returnHistory.unshift(newReturnRecord);
+            activeLoans.splice(loanIndex, 1);
+
+            populateTrxSelectOptions();
+            resetReturnForm();
+            updateDashboard();
+            renderMonitoringTable();
+            renderHistoryTable();
+
+            showToast(`Pengembalian ${loan.id} berhasil diproses PERPUSTAKAAN SELF!`, 'success');
+        }
+
+        function resetReturnForm() {
+            document.getElementById('form-pengembalian-buku').reset();
+            document.getElementById('input-tgl-kembali').value = getFormattedDate(0);
+            document.getElementById('hidden-trx-id').value = '';
+            document.getElementById('quick-trx-info').classList.add('hidden');
+            document.getElementById('btn-submit-return').disabled = true;
+            calculateFineDetails();
+        }
+
+        function setFilterStatus(status) {
+            currentFilterStatus = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+                btn.classList.add('border-slate-800', 'text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`filter-btn-${status}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+                activeBtn.classList.remove('border-slate-800', 'text-slate-400');
+            }
+
+            renderMonitoringTable();
+        }
+
+        function renderMonitoringTable() {
+            const tbody = document.getElementById('monitoring-table-body');
+            const searchVal = document.getElementById('monitoring-search').value.toLowerCase();
+            const today = getFormattedDate(0);
+
+            tbody.innerHTML = '';
+
+            let filtered = activeLoans.filter(loan => {
+                const matchesSearch = loan.memberName.toLowerCase().includes(searchVal) || 
+                                      loan.bookTitle.toLowerCase().includes(searchVal) ||
+                                      loan.id.toLowerCase().includes(searchVal);
+
+                const lateDays = calculateDaysOverdue(loan.dueDate, today);
+
+                let matchesFilter = true;
+                if (currentFilterStatus === 'TERLAMBAT') {
+                    matchesFilter = lateDays > 0;
+                } else if (currentFilterStatus === 'MENJELANG') {
+                    matchesFilter = lateDays <= 0 && lateDays >= -2;
+                } else if (currentFilterStatus === 'TEPAT_WAKTU') {
+                    matchesFilter = lateDays < -2;
+                }
+
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500">Tidak ada data peminjaman yang cocok.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(loan => {
+                const lateDays = calculateDaysOverdue(loan.dueDate, today);
+                const fineEst = lateDays > 0 ? lateDays * DENDA_PER_HARI : 0;
+
+                let statusBadge = '';
+                if (lateDays > 0) {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">Terlambat</span>`;
+                } else if (lateDays >= -2) {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">Menjelang Tenggat</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">Lancar</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-900/50 transition">
+                        <td class="p-4 font-mono text-xs font-bold text-amber-300">${loan.id}</td>
+                        <td class="p-4">
+                            <div class="font-semibold text-slate-200">${loan.memberName}</div>
+                            <div class="text-[10px] text-slate-500 font-mono">${loan.memberId}</div>
+                        </td>
+                        <td class="p-4 text-slate-300 font-medium">${loan.bookTitle}</td>
+                        <td class="p-4 text-center font-mono text-slate-400">${loan.borrowDate}</td>
+                        <td class="p-4 text-center font-mono font-semibold text-slate-200">${loan.dueDate}</td>
+                        <td class="p-4 text-center">
+                            ${lateDays > 0 
+                                ? `<span class="font-bold text-rose-400">+${lateDays} Hari</span>` 
+                                : `<span class="text-slate-500">${Math.abs(lateDays)} Hari Lagi</span>`}
+                        </td>
+                        <td class="p-4 text-right font-mono font-semibold text-slate-200">${formatRupiah(fineEst)}</td>
+                        <td class="p-4 text-center">${statusBadge}</td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="quickReturn('${loan.id}')" title="Proses Pengembalian" class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition">
+                                    <i class="fa-solid fa-arrow-left-rotate"></i>
+                                </button>
+                                ${lateDays > 0 ? `
+                                    <button onclick="openNotifModal('${loan.id}')" title="Kirim Peringatan" class="p-2 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 transition">
+                                        <i class="fa-solid fa-bell"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function quickReturn(trxId) {
+            switchTab('form-pengembalian');
+            document.getElementById('select-active-trx').value = trxId;
+            loadTransactionData(trxId);
+        }
+
+        function openNotifModal(trxId) {
+            selectedNotifTrx = activeLoans.find(l => l.id === trxId);
+            if (!selectedNotifTrx) return;
+
+            const today = getFormattedDate(0);
+            const lateDays = calculateDaysOverdue(selectedNotifTrx.dueDate, today);
+            const fineEst = lateDays * DENDA_PER_HARI;
+
+            document.getElementById('modal-penerima-info').textContent = `${selectedNotifTrx.memberName} (${selectedNotifTrx.phone})`;
+            
+            const defaultMsg = `Yth. Anggota ${selectedNotifTrx.memberName},\n\n` +
+                `PEMBERITAHUAN RESMI PERPUSTAKAAN SELF:\n` +
+                `Peminjaman buku "${selectedNotifTrx.bookTitle}" (ID: ${selectedNotifTrx.id}) telah melewati tenggat pengembalian pada tanggal ${selectedNotifTrx.dueDate}.\n\n` +
+                `Keterlambatan: ${lateDays} hari.\n` +
+                `Estimasi akumulasi denda: ${formatRupiah(fineEst)}.\n\n` +
+                `Mohon dapat menyelesaikan pengembalian fisik buku di meja layanan PERPUSTAKAAN SELF. Terima kasih.`;
+
+            document.getElementById('modal-pesan-text').value = defaultMsg;
+            document.getElementById('modal-notif').classList.remove('hidden');
+        }
+
+        function closeNotifModal() {
+            document.getElementById('modal-notif').classList.add('hidden');
+            selectedNotifTrx = null;
+        }
+
+        function sendNotifAction() {
+            if (!selectedNotifTrx) return;
+            
+            const channel = document.querySelector('input[name="notif-channel"]:checked').value;
+            showToast(`Notifikasi peringatan dikirimkan ke ${selectedNotifTrx.memberName} via ${channel}!`, 'info');
+            closeNotifModal();
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('riwayat-table-body');
+            tbody.innerHTML = '';
+
+            if (returnHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">Belum ada riwayat pengembalian tersimpan.</td></tr>`;
+                return;
+            }
+
+            returnHistory.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-900/50 transition">
+                        <td class="p-4 font-mono font-bold text-amber-400">${item.returnId}</td>
+                        <td class="p-4 font-mono text-slate-500">${item.trxId}</td>
+                        <td class="p-4 font-semibold text-slate-200">${item.memberName}</td>
+                        <td class="p-4 text-slate-300">${item.bookTitle}</td>
+                        <td class="p-4 text-center font-mono text-slate-400">${item.returnDate}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-semibold ${getConditionBadgeClass(item.condition)}">
+                                ${item.condition}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right font-mono font-bold ${item.finePaid > 0 ? 'text-amber-400' : 'text-slate-300'}">${formatRupiah(item.finePaid)}</td>
+                        <td class="p-4 text-slate-400 max-w-[200px] truncate" title="${item.notes}">${item.notes}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function getConditionBadgeClass(condition) {
+            switch(condition) {
+                case 'Bagus': return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30';
+                case 'Rusak Ringan': return 'bg-amber-500/10 text-amber-300 border border-amber-500/30';
+                case 'Rusak Berat': return 'bg-orange-500/10 text-orange-300 border border-orange-500/30';
+                case 'Hilang': return 'bg-rose-500/10 text-rose-300 border border-rose-500/30';
+                default: return 'bg-slate-800 text-slate-400';
+            }
+        }
+
+        function calculateDaysOverdue(dueDateStr, returnDateStr) {
+            const due = new Date(dueDateStr);
+            const ret = new Date(returnDateStr);
+            const diffTime = ret - due;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-900 border-slate-700 text-slate-200';
+            let icon = 'fa-info-circle text-amber-400';
+
+            if (type === 'success') {
+                bgClass = 'bg-slate-900 border-amber-500/40 text-amber-200';
+                icon = 'fa-circle-check text-amber-400';
+            } else if (type === 'error') {
+                bgClass = 'bg-slate-900 border-rose-500/40 text-rose-200';
+                icon = 'fa-circle-exclamation text-rose-400';
+            } else if (type === 'info') {
+                bgClass = 'bg-slate-900 border-amber-500/30 text-amber-300';
+                icon = 'fa-paper-plane text-amber-400';
+            }
+
+            toast.className = `${bgClass} border px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs font-semibold backdrop-blur-md transition-all duration-300 pointer-events-auto transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
